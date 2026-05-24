@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elementle — Guess the Element</title>
+<style>
+/* ============================================================
+   ELEMENTLE — Design System
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg: #0a0c10;
+  --bg2: #0e1117;
+  --bg3: #141820;
+  --surface: rgba(255,255,255,0.04);
+  --surface2: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.14);
+  --text: #e8eaf2;
+  --text2: #8b90a4;
+  --text3: #555a6e;
+  --accent: #4af0b4;
+  --accent2: #7b6ff0;
+  --accent3: #f06090;
+  --gold: #f0c040;
+  --green: #3dd68c;
+  --green-bg: rgba(61,214,140,0.15);
+  --yellow: #f0c040;
+  --yellow-bg: rgba(240,192,64,0.15);
+  --red: #f06060;
+  --red-bg: rgba(240,96,96,0.12);
+  --gray: #4a5066;
+  --gray-bg: rgba(74,80,102,0.2);
+  --radius: 12px;
+  --radius-sm: 8px;
+  --mono: 'Space Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --glow-accent: 0 0 20px rgba(74,240,180,0.25);
+}
+.colorblind {
+  --green: #1a80ff; --green-bg: rgba(26,128,255,0.15);
+  --yellow: #ff9500; --yellow-bg: rgba(255,149,0,0.15);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  font-family: var(--sans); background: var(--bg); color: var(--text);
+  min-height: 100vh; overflow-x: hidden; position: relative;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 20% -10%, rgba(74,240,180,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, rgba(123,111,240,0.06) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ---- HEADER ---- */
+#header {
+  position: relative; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; border-bottom: 1px solid var(--border);
+  background: rgba(10,12,16,0.85); backdrop-filter: blur(12px);
+}
+#logo {
+  font-family: var(--mono); font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+#logo span { font-size: 0.85em; opacity: 0.7; }
+.header-btns { display: flex; gap: 8px; align-items: center; }
+.icon-btn {
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--surface); color: var(--text2); cursor: pointer; font-size: 1rem;
+  display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+.icon-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+.streak-badge {
+  font-family: var(--mono); font-size: 0.72rem; padding: 4px 10px; border-radius: 20px;
+  background: linear-gradient(135deg, rgba(74,240,180,0.15), rgba(123,111,240,0.15));
+  border: 1px solid rgba(74,240,180,0.3); color: var(--accent);
+}
+
+/* ---- MAIN LAYOUT ---- */
+#app { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
+
+/* ---- MODE TABS ---- */
+#mode-tabs {
+  display: flex; gap: 8px; margin-bottom: 20px;
+  background: var(--bg2); border-radius: 10px; padding: 4px; border: 1px solid var(--border);
+}
+.mode-tab {
+  flex: 1; padding: 8px; border-radius: 7px; border: none;
+  font-family: var(--sans); font-size: 0.82rem; font-weight: 600;
+  cursor: pointer; color: var(--text2); background: transparent; transition: all 0.2s; letter-spacing: 0.3px;
+}
+.mode-tab.active {
+  background: linear-gradient(135deg, rgba(74,240,180,0.2), rgba(123,111,240,0.2));
+  color: var(--accent); border: 1px solid rgba(74,240,180,0.3);
+}
+
+/* ---- TARGET INFO PANEL ---- */
+#target-panel {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 16px 20px; margin-bottom: 18px; display: flex; align-items: center; gap: 16px;
+}
+#target-panel .q-mark {
+  width: 52px; height: 60px; flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(74,240,180,0.1), rgba(123,111,240,0.1));
+  border: 2px solid rgba(74,240,180,0.3); border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 1.6rem; font-weight: 700;
+  color: var(--accent); text-shadow: var(--glow-accent);
+}
+#target-panel .info { flex: 1; }
+#target-panel .info h3 { font-size: 0.95rem; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+#target-panel .info p { font-size: 0.8rem; color: var(--text2); }
+#target-panel .guess-count { font-family: var(--mono); font-size: 1.1rem; color: var(--text2); text-align: right; }
+#target-panel .guess-count span { display: block; font-size: 0.72rem; color: var(--text3); }
+
+/* ---- SEARCH ---- */
+#search-wrap { position: relative; margin-bottom: 18px; }
+#search-input {
+  width: 100%; padding: 13px 48px 13px 18px; background: var(--bg2); color: var(--text);
+  border: 1.5px solid var(--border2); border-radius: var(--radius);
+  font-family: var(--sans); font-size: 1rem; outline: none; transition: all 0.2s; caret-color: var(--accent);
+}
+#search-input:focus { border-color: var(--accent); background: var(--bg3); box-shadow: 0 0 0 3px rgba(74,240,180,0.08); }
+#search-input::placeholder { color: var(--text3); }
+#search-submit {
+  position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none; color: #000; width: 32px; height: 32px; border-radius: 7px;
+  cursor: pointer; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+}
+#search-submit:hover { opacity: 0.85; transform: translateY(-50%) scale(1.05); }
+#autocomplete {
+  position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  overflow: hidden; max-height: 200px; overflow-y: auto; z-index: 100; display: none;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+#autocomplete.show { display: block; }
+.ac-item { padding: 10px 16px; cursor: pointer; transition: background 0.15s; display: flex; align-items: center; gap: 10px; font-size: 0.9rem; }
+.ac-item:hover, .ac-item.selected { background: var(--surface2); }
+.ac-sym { font-family: var(--mono); font-size: 0.8rem; color: var(--accent); width: 26px; }
+.ac-num { font-size: 0.75rem; color: var(--text3); margin-left: auto; }
+
+/* ---- GUESS TABLE ---- */
+#guess-area { margin-bottom: 20px; }
+.guess-header { display: grid; gap: 4px; margin-bottom: 6px; }
+.guess-header-inner { display: grid; grid-template-columns: 140px repeat(11, 1fr); gap: 4px; padding: 0 4px; }
+.col-label {
+  font-size: 0.62rem; font-weight: 700; color: var(--text3); text-align: center;
+  text-transform: uppercase; letter-spacing: 0.5px; padding: 4px 2px;
+}
+.col-label:first-child { text-align: left; padding-left: 8px; }
+.guess-row {
+  display: grid; grid-template-columns: 140px repeat(11, 1fr);
+  gap: 4px; margin-bottom: 4px;
+  animation: slideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes slideIn { from { opacity: 0; transform: translateY(-10px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+.cell {
+  border-radius: var(--radius-sm); padding: 7px 4px; text-align: center; font-size: 0.72rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 54px; position: relative; transition: all 0.3s;
+  animation: revealCell 0.4s ease both;
+}
+@keyframes revealCell { from { transform: scale(0.8) rotateX(-30deg); opacity: 0; } to { transform: scale(1) rotateX(0deg); opacity: 1; } }
+.cell.green { background: var(--green-bg); border: 1px solid rgba(61,214,140,0.4); color: var(--green); }
+.cell.yellow { background: var(--yellow-bg); border: 1px solid rgba(240,192,64,0.4); color: var(--yellow); }
+.cell.gray { background: var(--gray-bg); border: 1px solid rgba(74,80,102,0.4); color: var(--text2); }
+.cell .val { font-family: var(--mono); font-size: 0.75rem; font-weight: 700; line-height: 1.2; }
+.cell .arrow { font-size: 0.65rem; opacity: 0.85; }
+.cell-name {
+  text-align: left; padding: 8px 10px; border-radius: var(--radius-sm);
+  display: flex; align-items: center; gap: 8px; min-height: 54px;
+  animation: slideIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.cell-name .sym { font-family: var(--mono); font-size: 1.1rem; font-weight: 700; color: var(--accent); min-width: 26px; }
+.cell-name .nm { font-size: 0.82rem; font-weight: 600; line-height: 1.2; }
+.cell-name .num { font-size: 0.65rem; color: var(--text3); }
+
+/* ---- PERIODIC TABLE ---- */
+#pt-section { margin-top: 24px; }
+#pt-toggle {
+  width: 100%; padding: 10px; background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--text2); cursor: pointer;
+  font-family: var(--sans); font-size: 0.85rem; font-weight: 500; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+#pt-toggle:hover { background: var(--surface2); color: var(--text); }
+#pt-wrap { margin-top: 12px; display: none; overflow-x: auto; }
+#pt-wrap.show { display: block; }
+#pt-grid { display: grid; grid-template-columns: repeat(18, minmax(32px, 1fr)); gap: 3px; min-width: 600px; padding: 4px; }
+.pt-cell {
+  aspect-ratio: 0.85; border-radius: 5px; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-size: 0.6rem; transition: all 0.15s; border: 1px solid transparent; position: relative;
+}
+.pt-cell:hover { transform: scale(1.15); z-index: 5; border-color: var(--accent); box-shadow: 0 0 12px rgba(74,240,180,0.3); }
+.pt-cell .pt-sym { font-family: var(--mono); font-size: 0.75rem; font-weight: 700; }
+.pt-cell .pt-num { font-size: 0.52rem; opacity: 0.7; }
+.pt-cell.guessed { opacity: 0.4; pointer-events: none; }
+.pt-cell.target-reveal { animation: ptPulse 1s ease infinite; }
+@keyframes ptPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(74,240,180,0.5); } 50% { box-shadow: 0 0 0 6px rgba(74,240,180,0); } }
+.cat-alkali { background: rgba(240,96,96,0.15); color: #f07070; }
+.cat-alkaline { background: rgba(240,150,80,0.15); color: #f09850; }
+.cat-transition { background: rgba(123,111,240,0.15); color: #a090f0; }
+.cat-post-transition { background: rgba(74,180,240,0.15); color: #60c0f0; }
+.cat-metalloid { background: rgba(74,240,180,0.15); color: #60f0c0; }
+.cat-nonmetal { background: rgba(100,240,100,0.15); color: #70e070; }
+.cat-halogen { background: rgba(240,60,180,0.15); color: #f060c0; }
+.cat-noble { background: rgba(240,200,60,0.15); color: #f0c840; }
+.cat-lanthanide { background: rgba(180,120,240,0.15); color: #c090f0; }
+.cat-actinide { background: rgba(240,120,120,0.15); color: #f08080; }
+.cat-unknown { background: rgba(100,100,100,0.15); color: #909090; }
+
+/* ---- MODALS ---- */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px; opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: 16px; padding: 28px;
+  max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto;
+  transform: scale(0.95) translateY(10px); transition: transform 0.25s;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.5);
+}
+.modal-overlay.show .modal { transform: scale(1) translateY(0); }
+.modal h2 {
+  font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.modal-close {
+  float: right; background: none; border: none; color: var(--text2);
+  font-size: 1.3rem; cursor: pointer; margin-top: -4px; margin-left: 8px;
+}
+.modal-close:hover { color: var(--text); }
+
+/* Help */
+.help-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.help-row:last-child { border-bottom: none; }
+.help-chip { flex-shrink: 0; width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; }
+.help-row p { font-size: 0.85rem; color: var(--text2); line-height: 1.5; }
+
+/* Win/Lose */
+#win-element {
+  display: flex; align-items: center; gap: 16px; background: var(--surface); border-radius: 12px;
+  padding: 16px; margin: 16px 0; border: 1px solid rgba(74,240,180,0.2);
+}
+#win-element .big-sym { font-family: var(--mono); font-size: 2.4rem; font-weight: 700; color: var(--accent); text-shadow: var(--glow-accent); }
+#win-element .win-info h3 { font-size: 1.1rem; font-weight: 700; }
+#win-element .win-info p { font-size: 0.82rem; color: var(--text2); margin-top: 4px; }
+.win-stats { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 16px 0; }
+.win-stat { background: var(--surface); border-radius: 10px; padding: 12px; text-align: center; border: 1px solid var(--border); }
+.win-stat .n { font-family: var(--mono); font-size: 1.6rem; font-weight: 700; color: var(--accent); }
+.win-stat .l { font-size: 0.72rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+#share-btn, #new-game-btn {
+  width: 100%; padding: 12px; margin-top: 8px; border-radius: var(--radius-sm); border: none;
+  font-family: var(--sans); font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+#share-btn { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: #000; }
+#share-btn:hover { opacity: 0.9; transform: scale(1.01); }
+#new-game-btn { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); margin-top: 8px; }
+#new-game-btn:hover { background: var(--border2); }
+
+/* Stats */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.stat-box { background: var(--surface); border-radius: 10px; padding: 12px 8px; text-align: center; border: 1px solid var(--border); }
+.stat-box .n { font-family: var(--mono); font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+.stat-box .l { font-size: 0.65rem; color: var(--text3); text-transform: uppercase; letter-spacing: 0.5px; }
+.dist-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 0.8rem; }
+.dist-bar .bar-wrap { flex: 1; background: var(--surface); border-radius: 4px; height: 18px; }
+.dist-bar .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--accent), var(--accent2)); min-width: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; font-size: 0.7rem; color: #000; font-weight: 700; }
+.dist-bar .bar-fill.highlight { background: linear-gradient(90deg, var(--green), var(--accent)); }
+
+/* Settings */
+.setting-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.setting-row:last-child { border-bottom: none; }
+.setting-label h4 { font-size: 0.9rem; font-weight: 600; }
+.setting-label p { font-size: 0.75rem; color: var(--text2); margin-top: 2px; }
+.toggle { width: 44px; height: 24px; border-radius: 12px; background: var(--border2); cursor: pointer; position: relative; transition: background 0.2s; flex-shrink: 0; border: none; }
+.toggle::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform 0.2s; }
+.toggle.on { background: var(--accent); }
+.toggle.on::after { transform: translateX(20px); }
+select.setting-select { background: var(--bg2); color: var(--text); border: 1px solid var(--border2); border-radius: 8px; padding: 6px 10px; font-family: var(--sans); font-size: 0.85rem; cursor: pointer; outline: none; }
+
+/* Hint */
+#hint-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, rgba(240,192,64,0.1), rgba(240,96,144,0.1));
+  border: 1px solid rgba(240,192,64,0.3); color: var(--gold); padding: 8px 14px; border-radius: 8px;
+  font-family: var(--sans); font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-bottom: 12px;
+}
+#hint-btn:hover { background: rgba(240,192,64,0.15); }
+#hint-text { background: rgba(240,192,64,0.08); border: 1px solid rgba(240,192,64,0.2); border-radius: 8px; padding: 10px 14px; font-size: 0.85rem; color: var(--gold); margin-bottom: 12px; display: none; }
+#hint-text.show { display: block; animation: fadeIn 0.3s; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
+  background: var(--bg3); border: 1px solid var(--border2); border-radius: 8px; padding: 10px 20px;
+  font-size: 0.9rem; color: var(--text); z-index: 2000; transition: transform 0.3s, opacity 0.3s;
+  opacity: 0; pointer-events: none; white-space: nowrap; box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+#toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+/* Confetti */
+#confetti-canvas { position: fixed; inset: 0; z-index: 500; pointer-events: none; }
+
+/* Timer */
+#timer-wrap { display: none; align-items: center; gap: 8px; font-family: var(--mono); font-size: 0.85rem; color: var(--text2); margin-bottom: 12px; }
+#timer-wrap.show { display: flex; }
+#timer-val { font-size: 1.1rem; color: var(--accent); }
+.timer-bar { flex: 1; height: 4px; background: var(--surface2); border-radius: 2px; }
+.timer-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 2px; transition: width 1s linear; }
+
+/* Facts popup */
+#facts-popup {
+  position: fixed; z-index: 900; background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: 12px; padding: 16px; max-width: 240px; box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  display: none; pointer-events: none;
+}
+#facts-popup.show { display: block; pointer-events: all; }
+#facts-popup h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; }
+#facts-popup p { font-size: 0.75rem; color: var(--text2); line-height: 1.5; }
+
+/* Difficulty banner */
+#difficulty-banner { text-align: center; font-size: 0.75rem; color: var(--text3); margin-bottom: 10px; }
+#difficulty-banner span { color: var(--accent); font-weight: 600; }
+
+/* Empty state */
+#empty-state { text-align: center; padding: 40px 20px; color: var(--text3); font-size: 0.88rem; line-height: 1.7; }
+#empty-state .big { font-size: 2.5rem; margin-bottom: 12px; }
+
+/* ---- ELEMENT DATA SHEET modal ---- */
+#datasheet-modal .modal { max-width: 880px; }
+#datasheet-warning {
+  background: rgba(240,96,96,0.08); border: 1px solid rgba(240,96,96,0.35);
+  border-radius: 10px; padding: 14px 18px; margin-bottom: 18px;
+  font-size: 0.85rem; color: var(--red); line-height: 1.6;
+}
+#datasheet-warning strong { display: block; font-size: 0.95rem; margin-bottom: 4px; }
+#datasheet-confirm-row { display: flex; gap: 10px; margin-bottom: 18px; }
+#ds-cancel-btn {
+  flex: 1; padding: 10px; background: var(--surface2); border: 1px solid var(--border2);
+  border-radius: 8px; color: var(--text); cursor: pointer; font-family: var(--sans); font-size: 0.88rem; font-weight: 600;
+}
+#ds-cancel-btn:hover { background: var(--border2); }
+#ds-confirm-btn {
+  flex: 1; padding: 10px; background: rgba(240,96,96,0.15); border: 1px solid var(--red);
+  border-radius: 8px; color: var(--red); cursor: pointer; font-family: var(--sans); font-size: 0.88rem; font-weight: 600;
+}
+#ds-confirm-btn:hover { background: rgba(240,96,96,0.25); }
+#datasheet-content { display: none; }
+#datasheet-content.show { display: block; }
+.ds-table-wrap { overflow-x: auto; }
+table.ds-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+table.ds-table th {
+  background: var(--bg3); color: var(--text2); font-family: var(--mono); font-weight: 700;
+  font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 8px 6px; text-align: left; position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--border2);
+}
+table.ds-table td { padding: 6px 6px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: middle; }
+table.ds-table tr:hover td { background: var(--surface); color: var(--text); }
+table.ds-table .sym-col { font-family: var(--mono); font-weight: 700; color: var(--accent); }
+table.ds-table .name-col { font-weight: 600; color: var(--text); }
+.cat-badge {
+  display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 0.65rem; font-weight: 600;
+}
+.ds-search { width: 100%; padding: 9px 14px; background: var(--bg3); color: var(--text); border: 1px solid var(--border2); border-radius: 8px; font-family: var(--sans); font-size: 0.88rem; outline: none; margin-bottom: 12px; }
+.ds-search:focus { border-color: var(--accent); }
+
+/* ---- FORFEITED BANNER ---- */
+#forfeit-banner {
+  display: none; background: rgba(240,96,96,0.1); border: 1px solid rgba(240,96,96,0.3);
+  border-radius: 8px; padding: 10px 16px; margin-bottom: 12px;
+  font-size: 0.83rem; color: var(--red); text-align: center;
+}
+#forfeit-banner.show { display: block; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .guess-header-inner, .guess-row { grid-template-columns: 100px repeat(11, 1fr); }
+  .cell { min-height: 46px; padding: 5px 2px; }
+  .cell .val { font-size: 0.65rem; }
+  #app { padding: 12px 8px 40px; }
+  #logo { font-size: 1.2rem; }
+}
+@media (max-width: 480px) {
+  .guess-header-inner, .guess-row { grid-template-columns: 80px repeat(11, 1fr); }
+  .cell .val { font-size: 0.6rem; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<!-- HEADER -->
+<header id="header">
+  <div id="logo">⚗ Elementle <span>118</span></div>
+  <div class="header-btns">
+    <div class="streak-badge" id="streak-display">🔥 0</div>
+    <button class="icon-btn" onclick="openModal('help-modal')" title="How to play">?</button>
+    <button class="icon-btn" onclick="openModal('stats-modal')" title="Statistics">📊</button>
+    <button class="icon-btn" onclick="openDataSheet()" title="Element Data Sheet">🔬</button>
+    <button class="icon-btn" onclick="openModal('settings-modal')" title="Settings">⚙️</button>
+  </div>
+</header>
+
+<div id="app">
+
+  <div id="mode-tabs">
+    <button class="mode-tab active" onclick="setMode('daily')" id="tab-daily">📅 Daily</button>
+    <button class="mode-tab" onclick="setMode('random')" id="tab-random">🎲 Random</button>
+    <button class="mode-tab" onclick="setMode('timed')" id="tab-timed">⏱ Timed</button>
+  </div>
+
+  <div id="difficulty-banner">Difficulty: <span id="diff-label">Normal</span> — Max <span id="max-guesses-label">8</span> guesses</div>
+
+  <div id="forfeit-banner">☠️ You forfeited today's daily by viewing the element data sheet. The answer was revealed below.</div>
+
+  <div id="target-panel">
+    <div class="q-mark" id="target-qmark">?</div>
+    <div class="info">
+      <h3 id="target-title">Guess today's mystery element!</h3>
+      <p id="target-clue">Type an element name or symbol to start guessing.</p>
+    </div>
+    <div class="guess-count">
+      <span>Guesses</span>
+      <span id="guess-num">0</span> / <span id="max-guesses">8</span>
+    </div>
+  </div>
+
+  <div id="timer-wrap">
+    ⏱ <span id="timer-val">3:00</span>
+    <div class="timer-bar"><div class="timer-bar-fill" id="timer-fill" style="width:100%"></div></div>
+  </div>
+
+  <div id="search-wrap">
+    <input type="text" id="search-input" placeholder="Search element name or symbol…" autocomplete="off" spellcheck="false">
+    <button id="search-submit" onclick="submitGuess()">→</button>
+    <div id="autocomplete"></div>
+  </div>
+
+  <button id="hint-btn" onclick="showHint()">💡 Hint <span id="hint-count">(3 left)</span></button>
+  <div id="hint-text"></div>
+
+  <div class="guess-header" id="guess-header" style="display:none">
+    <div class="guess-header-inner">
+      <div class="col-label">Element</div>
+      <div class="col-label">At. #</div>
+      <div class="col-label">Mass</div>
+      <div class="col-label">Group</div>
+      <div class="col-label">Period</div>
+      <div class="col-label">Category</div>
+      <div class="col-label">State</div>
+      <div class="col-label">EN</div>
+      <div class="col-label">Density</div>
+      <div class="col-label">Melt</div>
+      <div class="col-label">Boil</div>
+      <div class="col-label">Year</div>
+    </div>
+  </div>
+
+  <div id="guess-area">
+    <div id="empty-state">
+      <div class="big">⚗</div>
+      <p>Guess any element from the periodic table.<br>Each guess reveals clues about the mystery element.</p>
+    </div>
+  </div>
+
+  <div id="pt-section">
+    <button id="pt-toggle" onclick="togglePT()">🔬 Show Periodic Table</button>
+    <div id="pt-wrap"><div id="pt-grid"></div></div>
+  </div>
+
+</div>
+
+<!-- HELP MODAL -->
+<div class="modal-overlay" id="help-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('help-modal')">✕</button>
+    <h2>How to Play</h2>
+    <p style="font-size:0.85rem;color:var(--text2);margin-bottom:16px">Guess the mystery chemical element. Each guess reveals scientific clues!</p>
+    <div class="help-row">
+      <div class="help-chip" style="background:var(--green-bg);color:var(--green);">✓</div>
+      <p><strong>Green</strong> — Exact match for that property</p>
+    </div>
+    <div class="help-row">
+      <div class="help-chip" style="background:var(--yellow-bg);color:var(--yellow);">~</div>
+      <p><strong>Yellow</strong> — Close! Within a small range for numbers, or same family for categories</p>
+    </div>
+    <div class="help-row">
+      <div class="help-chip" style="background:var(--gray-bg);color:var(--text2);">✗</div>
+      <p><strong>Gray</strong> — Not close. Arrows ↑↓ show whether the answer is higher or lower</p>
+    </div>
+    <div style="margin-top:16px;padding:12px;background:var(--surface);border-radius:8px;font-size:0.8rem;color:var(--text2);line-height:1.7">
+      <strong style="color:var(--text)">Proximity ranges (yellow):</strong><br>
+      At. Number: ±5 &nbsp;|&nbsp; Period/Group: ±1 &nbsp;|&nbsp; Mass: ±10<br>
+      Electronegativity: ±0.5 &nbsp;|&nbsp; Melting/Boiling: ±200°C &nbsp;|&nbsp; Year: ±30
+    </div>
+    <div style="margin-top:12px;padding:12px;background:var(--surface);border-radius:8px;font-size:0.8rem;color:var(--text2)">
+      <strong style="color:var(--text)">📅 Daily Challenge</strong><br>
+      Every player in the world gets the <em>same element every day</em> — determined by UTC date. Your progress is saved so refreshing or switching tabs won't let you cheat!<br><br>
+      <strong style="color:var(--red)">⚠️ Data Sheet Warning:</strong> Opening the element data sheet while a daily is in progress will forfeit your game.
+    </div>
+    <div style="margin-top:12px;padding:12px;background:var(--surface);border-radius:8px;font-size:0.8rem;color:var(--text2)">
+      <strong style="color:var(--text)">⌨️ Keyboard shortcuts:</strong> Enter — Submit &nbsp; Escape — Close modals
+    </div>
+  </div>
+</div>
+
+<!-- STATS MODAL -->
+<div class="modal-overlay" id="stats-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('stats-modal')">✕</button>
+    <h2>Your Statistics</h2>
+    <div class="stats-grid">
+      <div class="stat-box"><div class="n" id="s-played">0</div><div class="l">Played</div></div>
+      <div class="stat-box"><div class="n" id="s-win">0%</div><div class="l">Win %</div></div>
+      <div class="stat-box"><div class="n" id="s-streak">0</div><div class="l">Streak</div></div>
+      <div class="stat-box"><div class="n" id="s-best">0</div><div class="l">Best</div></div>
+    </div>
+    <h3 style="font-size:0.85rem;font-weight:700;margin-bottom:10px;color:var(--text2)">GUESS DISTRIBUTION</h3>
+    <div id="dist-bars"></div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('settings-modal')">✕</button>
+    <h2>Settings</h2>
+    <div class="setting-row">
+      <div class="setting-label"><h4>Colorblind Mode</h4><p>Better contrast for color vision deficiencies</p></div>
+      <button class="toggle" id="toggle-colorblind" onclick="toggleSetting('colorblind')"></button>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label"><h4>Sound Effects</h4><p>Subtle audio feedback on guesses</p></div>
+      <button class="toggle on" id="toggle-sound" onclick="toggleSetting('sound')"></button>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label"><h4>Animations</h4><p>Cell reveal and confetti animations</p></div>
+      <button class="toggle on" id="toggle-animations" onclick="toggleSetting('animations')"></button>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label"><h4>Difficulty</h4><p>Controls max guesses (applies to Random/Timed only)</p></div>
+      <select class="setting-select" id="diff-select" onchange="changeDifficulty(this.value)">
+        <option value="easy">Easy (12 guesses)</option>
+        <option value="normal" selected>Normal (8 guesses)</option>
+        <option value="hard">Hard (5 guesses)</option>
+      </select>
+    </div>
+    <div class="setting-row">
+      <div class="setting-label"><h4>Reset Stats</h4><p>Clear all statistics and streak</p></div>
+      <button onclick="resetStats()" style="padding:6px 12px;background:var(--red-bg);border:1px solid var(--red);border-radius:6px;color:var(--red);cursor:pointer;font-family:var(--sans);font-size:0.82rem">Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- WIN/LOSE MODAL -->
+<div class="modal-overlay" id="end-modal">
+  <div class="modal">
+    <h2 id="end-title">🎉 You got it!</h2>
+    <div id="win-element">
+      <div class="big-sym" id="win-sym">?</div>
+      <div class="win-info">
+        <h3 id="win-name">-</h3>
+        <p id="win-desc">-</p>
+      </div>
+    </div>
+    <div class="win-stats">
+      <div class="win-stat"><div class="n" id="w-num">-</div><div class="l">Atomic #</div></div>
+      <div class="win-stat"><div class="n" id="w-guesses">-</div><div class="l">Guesses</div></div>
+      <div class="win-stat"><div class="n" id="w-streak">-</div><div class="l">Streak</div></div>
+    </div>
+    <div id="fun-fact" style="background:var(--surface);border-radius:8px;padding:12px;font-size:0.82rem;color:var(--text2);margin-bottom:12px;border:1px solid var(--border);line-height:1.6"></div>
+    <button id="share-btn" onclick="shareResults()">📋 Share Results</button>
+    <button id="new-game-btn" onclick="newGame()">🎲 New Game</button>
+  </div>
+</div>
+
+<!-- ELEMENT DATA SHEET MODAL -->
+<div class="modal-overlay" id="datasheet-modal">
+  <div class="modal" style="max-width:880px">
+    <button class="modal-close" onclick="closeModal('datasheet-modal')">✕</button>
+    <h2>📋 Element Data Sheet</h2>
+    <div id="datasheet-warning">
+      <strong>⚠️ Warning: Viewing this sheet may spoil your game!</strong>
+      This table contains all 118 elements with every property used in gameplay.
+      <span id="ds-daily-warning" style="display:none;color:var(--red);font-weight:600;display:block;margin-top:6px">
+        You have an active Daily Challenge in progress. <strong>Opening this sheet will forfeit today's game and reveal the answer.</strong>
+      </span>
+    </div>
+    <div id="datasheet-confirm-row">
+      <button id="ds-cancel-btn" onclick="closeModal('datasheet-modal')">← Go Back</button>
+      <button id="ds-confirm-btn" onclick="confirmDataSheet()">I understand — Show Data Sheet</button>
+    </div>
+    <div id="datasheet-content">
+      <input type="text" class="ds-search" id="ds-search" placeholder="Search elements…" oninput="filterDataSheet()" autocomplete="off">
+      <div class="ds-table-wrap">
+        <table class="ds-table" id="ds-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Sym</th><th>Name</th><th>Mass</th><th>Group</th><th>Period</th>
+              <th>Category</th><th>State</th><th>EN</th><th>Density</th><th>Melt °C</th><th>Boil °C</th><th>Year</th>
+            </tr>
+          </thead>
+          <tbody id="ds-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="facts-popup"></div>
+
+<script>
+'use strict';
+// ============================================================
+// ELEMENTLE — Game Engine v2
+// ============================================================
+
+// ---- ELEMENT DATA (all 118) ----
+const ELEMENTS = [
+  {n:"Hydrogen",s:"H",z:1,m:1.008,g:1,p:1,c:"nonmetal",st:"Gas",en:2.20,d:0.0000899,mp:-259.16,bp:-252.88,y:1766},
+  {n:"Helium",s:"He",z:2,m:4.003,g:18,p:1,c:"noble",st:"Gas",en:null,d:0.0001785,mp:-272.20,bp:-268.93,y:1868},
+  {n:"Lithium",s:"Li",z:3,m:6.941,g:1,p:2,c:"alkali",st:"Solid",en:0.98,d:0.534,mp:180.50,bp:1342,y:1817},
+  {n:"Beryllium",s:"Be",z:4,m:9.012,g:2,p:2,c:"alkaline",st:"Solid",en:1.57,d:1.85,mp:1287,bp:2469,y:1798},
+  {n:"Boron",s:"B",z:5,m:10.81,g:13,p:2,c:"metalloid",st:"Solid",en:2.04,d:2.37,mp:2076,bp:3927,y:1808},
+  {n:"Carbon",s:"C",z:6,m:12.011,g:14,p:2,c:"nonmetal",st:"Solid",en:2.55,d:2.267,mp:3550,bp:4027,y:-3750},
+  {n:"Nitrogen",s:"N",z:7,m:14.007,g:15,p:2,c:"nonmetal",st:"Gas",en:3.04,d:0.001251,mp:-210.01,bp:-195.79,y:1772},
+  {n:"Oxygen",s:"O",z:8,m:15.999,g:16,p:2,c:"nonmetal",st:"Gas",en:3.44,d:0.001429,mp:-218.79,bp:-182.96,y:1774},
+  {n:"Fluorine",s:"F",z:9,m:18.998,g:17,p:2,c:"halogen",st:"Gas",en:3.98,d:0.001696,mp:-219.67,bp:-188.11,y:1886},
+  {n:"Neon",s:"Ne",z:10,m:20.180,g:18,p:2,c:"noble",st:"Gas",en:null,d:0.0009,mp:-248.59,bp:-246.05,y:1898},
+  {n:"Sodium",s:"Na",z:11,m:22.990,g:1,p:3,c:"alkali",st:"Solid",en:0.93,d:0.971,mp:97.79,bp:882.94,y:1807},
+  {n:"Magnesium",s:"Mg",z:12,m:24.305,g:2,p:3,c:"alkaline",st:"Solid",en:1.31,d:1.738,mp:650,bp:1090,y:1755},
+  {n:"Aluminium",s:"Al",z:13,m:26.982,g:13,p:3,c:"post-transition",st:"Solid",en:1.61,d:2.698,mp:660.32,bp:2519,y:1825},
+  {n:"Silicon",s:"Si",z:14,m:28.085,g:14,p:3,c:"metalloid",st:"Solid",en:1.90,d:2.329,mp:1414,bp:2900,y:1824},
+  {n:"Phosphorus",s:"P",z:15,m:30.974,g:15,p:3,c:"nonmetal",st:"Solid",en:2.19,d:1.823,mp:44.15,bp:280.50,y:1669},
+  {n:"Sulfur",s:"S",z:16,m:32.06,g:16,p:3,c:"nonmetal",st:"Solid",en:2.58,d:2.067,mp:119.05,bp:444.61,y:-500},
+  {n:"Chlorine",s:"Cl",z:17,m:35.45,g:17,p:3,c:"halogen",st:"Gas",en:3.16,d:0.003214,mp:-101.50,bp:-34.04,y:1774},
+  {n:"Argon",s:"Ar",z:18,m:39.948,g:18,p:3,c:"noble",st:"Gas",en:null,d:0.001784,mp:-189.36,bp:-185.85,y:1894},
+  {n:"Potassium",s:"K",z:19,m:39.098,g:1,p:4,c:"alkali",st:"Solid",en:0.82,d:0.862,mp:63.38,bp:759,y:1807},
+  {n:"Calcium",s:"Ca",z:20,m:40.078,g:2,p:4,c:"alkaline",st:"Solid",en:1.00,d:1.55,mp:842,bp:1484,y:1808},
+  {n:"Scandium",s:"Sc",z:21,m:44.956,g:3,p:4,c:"transition",st:"Solid",en:1.36,d:2.989,mp:1541,bp:2836,y:1879},
+  {n:"Titanium",s:"Ti",z:22,m:47.867,g:4,p:4,c:"transition",st:"Solid",en:1.54,d:4.507,mp:1668,bp:3287,y:1791},
+  {n:"Vanadium",s:"V",z:23,m:50.942,g:5,p:4,c:"transition",st:"Solid",en:1.63,d:6.11,mp:1910,bp:3407,y:1801},
+  {n:"Chromium",s:"Cr",z:24,m:51.996,g:6,p:4,c:"transition",st:"Solid",en:1.66,d:7.19,mp:1907,bp:2671,y:1797},
+  {n:"Manganese",s:"Mn",z:25,m:54.938,g:7,p:4,c:"transition",st:"Solid",en:1.55,d:7.47,mp:1246,bp:2061,y:1774},
+  {n:"Iron",s:"Fe",z:26,m:55.845,g:8,p:4,c:"transition",st:"Solid",en:1.83,d:7.874,mp:1538,bp:2861,y:-3000},
+  {n:"Cobalt",s:"Co",z:27,m:58.933,g:9,p:4,c:"transition",st:"Solid",en:1.88,d:8.90,mp:1495,bp:2927,y:1735},
+  {n:"Nickel",s:"Ni",z:28,m:58.693,g:10,p:4,c:"transition",st:"Solid",en:1.91,d:8.908,mp:1455,bp:2913,y:1751},
+  {n:"Copper",s:"Cu",z:29,m:63.546,g:11,p:4,c:"transition",st:"Solid",en:1.90,d:8.96,mp:1084.62,bp:2562,y:-8000},
+  {n:"Zinc",s:"Zn",z:30,m:65.38,g:12,p:4,c:"transition",st:"Solid",en:1.65,d:7.14,mp:419.53,bp:907,y:1500},
+  {n:"Gallium",s:"Ga",z:31,m:69.723,g:13,p:4,c:"post-transition",st:"Solid",en:1.81,d:5.91,mp:29.76,bp:2204,y:1875},
+  {n:"Germanium",s:"Ge",z:32,m:72.630,g:14,p:4,c:"metalloid",st:"Solid",en:2.01,d:5.323,mp:938.25,bp:2820,y:1886},
+  {n:"Arsenic",s:"As",z:33,m:74.922,g:15,p:4,c:"metalloid",st:"Solid",en:2.18,d:5.727,mp:817,bp:614,y:-2800},
+  {n:"Selenium",s:"Se",z:34,m:78.971,g:16,p:4,c:"nonmetal",st:"Solid",en:2.55,d:4.81,mp:220.80,bp:685,y:1817},
+  {n:"Bromine",s:"Br",z:35,m:79.904,g:17,p:4,c:"halogen",st:"Liquid",en:2.96,d:3.12,mp:-7.2,bp:58.8,y:1826},
+  {n:"Krypton",s:"Kr",z:36,m:83.798,g:18,p:4,c:"noble",st:"Gas",en:3.00,d:0.003733,mp:-157.36,bp:-153.22,y:1898},
+  {n:"Rubidium",s:"Rb",z:37,m:85.468,g:1,p:5,c:"alkali",st:"Solid",en:0.82,d:1.532,mp:39.31,bp:688,y:1861},
+  {n:"Strontium",s:"Sr",z:38,m:87.62,g:2,p:5,c:"alkaline",st:"Solid",en:0.95,d:2.64,mp:777,bp:1382,y:1790},
+  {n:"Yttrium",s:"Y",z:39,m:88.906,g:3,p:5,c:"transition",st:"Solid",en:1.22,d:4.472,mp:1526,bp:3345,y:1794},
+  {n:"Zirconium",s:"Zr",z:40,m:91.224,g:4,p:5,c:"transition",st:"Solid",en:1.33,d:6.511,mp:1855,bp:4409,y:1789},
+  {n:"Niobium",s:"Nb",z:41,m:92.906,g:5,p:5,c:"transition",st:"Solid",en:1.60,d:8.57,mp:2477,bp:4744,y:1801},
+  {n:"Molybdenum",s:"Mo",z:42,m:95.95,g:6,p:5,c:"transition",st:"Solid",en:2.16,d:10.28,mp:2623,bp:4639,y:1781},
+  {n:"Technetium",s:"Tc",z:43,m:98,g:7,p:5,c:"transition",st:"Solid",en:1.90,d:11,mp:2157,bp:4265,y:1937},
+  {n:"Ruthenium",s:"Ru",z:44,m:101.07,g:8,p:5,c:"transition",st:"Solid",en:2.20,d:12.45,mp:2334,bp:4150,y:1844},
+  {n:"Rhodium",s:"Rh",z:45,m:102.91,g:9,p:5,c:"transition",st:"Solid",en:2.28,d:12.41,mp:1964,bp:3695,y:1803},
+  {n:"Palladium",s:"Pd",z:46,m:106.42,g:10,p:5,c:"transition",st:"Solid",en:2.20,d:12.02,mp:1554.9,bp:2963,y:1803},
+  {n:"Silver",s:"Ag",z:47,m:107.87,g:11,p:5,c:"transition",st:"Solid",en:1.93,d:10.49,mp:961.78,bp:2162,y:-3000},
+  {n:"Cadmium",s:"Cd",z:48,m:112.41,g:12,p:5,c:"transition",st:"Solid",en:1.69,d:8.65,mp:321.07,bp:767,y:1817},
+  {n:"Indium",s:"In",z:49,m:114.82,g:13,p:5,c:"post-transition",st:"Solid",en:1.78,d:7.31,mp:156.60,bp:2072,y:1863},
+  {n:"Tin",s:"Sn",z:50,m:118.71,g:14,p:5,c:"post-transition",st:"Solid",en:1.96,d:7.365,mp:231.93,bp:2602,y:-3300},
+  {n:"Antimony",s:"Sb",z:51,m:121.76,g:15,p:5,c:"metalloid",st:"Solid",en:2.05,d:6.697,mp:630.63,bp:1587,y:-3000},
+  {n:"Tellurium",s:"Te",z:52,m:127.60,g:16,p:5,c:"metalloid",st:"Solid",en:2.10,d:6.24,mp:449.51,bp:987.8,y:1782},
+  {n:"Iodine",s:"I",z:53,m:126.90,g:17,p:5,c:"halogen",st:"Solid",en:2.66,d:4.933,mp:113.70,bp:184.3,y:1811},
+  {n:"Xenon",s:"Xe",z:54,m:131.29,g:18,p:5,c:"noble",st:"Gas",en:2.60,d:0.005887,mp:-111.75,bp:-108.12,y:1898},
+  {n:"Caesium",s:"Cs",z:55,m:132.91,g:1,p:6,c:"alkali",st:"Solid",en:0.79,d:1.93,mp:28.44,bp:671,y:1860},
+  {n:"Barium",s:"Ba",z:56,m:137.33,g:2,p:6,c:"alkaline",st:"Solid",en:0.89,d:3.51,mp:727,bp:1897,y:1808},
+  {n:"Lanthanum",s:"La",z:57,m:138.91,g:3,p:6,c:"lanthanide",st:"Solid",en:1.10,d:6.162,mp:920,bp:3464,y:1839},
+  {n:"Cerium",s:"Ce",z:58,m:140.12,g:null,p:6,c:"lanthanide",st:"Solid",en:1.12,d:6.77,mp:798,bp:3443,y:1803},
+  {n:"Praseodymium",s:"Pr",z:59,m:140.91,g:null,p:6,c:"lanthanide",st:"Solid",en:1.13,d:6.77,mp:931,bp:3520,y:1885},
+  {n:"Neodymium",s:"Nd",z:60,m:144.24,g:null,p:6,c:"lanthanide",st:"Solid",en:1.14,d:7.01,mp:1016,bp:3074,y:1885},
+  {n:"Promethium",s:"Pm",z:61,m:145,g:null,p:6,c:"lanthanide",st:"Solid",en:1.13,d:7.26,mp:1042,bp:3000,y:1945},
+  {n:"Samarium",s:"Sm",z:62,m:150.36,g:null,p:6,c:"lanthanide",st:"Solid",en:1.17,d:7.52,mp:1072,bp:1794,y:1879},
+  {n:"Europium",s:"Eu",z:63,m:151.96,g:null,p:6,c:"lanthanide",st:"Solid",en:1.20,d:5.244,mp:822,bp:1529,y:1901},
+  {n:"Gadolinium",s:"Gd",z:64,m:157.25,g:null,p:6,c:"lanthanide",st:"Solid",en:1.20,d:7.90,mp:1312,bp:3273,y:1886},
+  {n:"Terbium",s:"Tb",z:65,m:158.93,g:null,p:6,c:"lanthanide",st:"Solid",en:1.10,d:8.23,mp:1356,bp:3230,y:1843},
+  {n:"Dysprosium",s:"Dy",z:66,m:162.50,g:null,p:6,c:"lanthanide",st:"Solid",en:1.22,d:8.55,mp:1412,bp:2567,y:1886},
+  {n:"Holmium",s:"Ho",z:67,m:164.93,g:null,p:6,c:"lanthanide",st:"Solid",en:1.23,d:8.80,mp:1474,bp:2700,y:1878},
+  {n:"Erbium",s:"Er",z:68,m:167.26,g:null,p:6,c:"lanthanide",st:"Solid",en:1.24,d:9.07,mp:1529,bp:2868,y:1843},
+  {n:"Thulium",s:"Tm",z:69,m:168.93,g:null,p:6,c:"lanthanide",st:"Solid",en:1.25,d:9.32,mp:1545,bp:1950,y:1879},
+  {n:"Ytterbium",s:"Yb",z:70,m:173.04,g:null,p:6,c:"lanthanide",st:"Solid",en:1.10,d:6.90,mp:819,bp:1196,y:1878},
+  {n:"Lutetium",s:"Lu",z:71,m:174.97,g:3,p:6,c:"lanthanide",st:"Solid",en:1.27,d:9.84,mp:1663,bp:3402,y:1907},
+  {n:"Hafnium",s:"Hf",z:72,m:178.49,g:4,p:6,c:"transition",st:"Solid",en:1.30,d:13.31,mp:2233,bp:4603,y:1923},
+  {n:"Tantalum",s:"Ta",z:73,m:180.95,g:5,p:6,c:"transition",st:"Solid",en:1.50,d:16.65,mp:3017,bp:5458,y:1802},
+  {n:"Tungsten",s:"W",z:74,m:183.84,g:6,p:6,c:"transition",st:"Solid",en:2.36,d:19.25,mp:3422,bp:5555,y:1783},
+  {n:"Rhenium",s:"Re",z:75,m:186.21,g:7,p:6,c:"transition",st:"Solid",en:1.90,d:21.02,mp:3186,bp:5596,y:1925},
+  {n:"Osmium",s:"Os",z:76,m:190.23,g:8,p:6,c:"transition",st:"Solid",en:2.20,d:22.59,mp:3033,bp:5012,y:1803},
+  {n:"Iridium",s:"Ir",z:77,m:192.22,g:9,p:6,c:"transition",st:"Solid",en:2.20,d:22.56,mp:2446,bp:4428,y:1803},
+  {n:"Platinum",s:"Pt",z:78,m:195.08,g:10,p:6,c:"transition",st:"Solid",en:2.28,d:21.45,mp:1768.3,bp:3825,y:1735},
+  {n:"Gold",s:"Au",z:79,m:196.97,g:11,p:6,c:"transition",st:"Solid",en:2.54,d:19.30,mp:1064.18,bp:2856,y:-2500},
+  {n:"Mercury",s:"Hg",z:80,m:200.59,g:12,p:6,c:"transition",st:"Liquid",en:2.00,d:13.546,mp:-38.83,bp:356.73,y:-2000},
+  {n:"Thallium",s:"Tl",z:81,m:204.38,g:13,p:6,c:"post-transition",st:"Solid",en:1.62,d:11.85,mp:304,bp:1473,y:1861},
+  {n:"Lead",s:"Pb",z:82,m:207.2,g:14,p:6,c:"post-transition",st:"Solid",en:2.33,d:11.34,mp:327.46,bp:1749,y:-7000},
+  {n:"Bismuth",s:"Bi",z:83,m:208.98,g:15,p:6,c:"post-transition",st:"Solid",en:2.02,d:9.78,mp:271.40,bp:1564,y:1753},
+  {n:"Polonium",s:"Po",z:84,m:209,g:16,p:6,c:"post-transition",st:"Solid",en:2.00,d:9.196,mp:254,bp:962,y:1898},
+  {n:"Astatine",s:"At",z:85,m:210,g:17,p:6,c:"halogen",st:"Solid",en:2.20,d:6.4,mp:302,bp:337,y:1940},
+  {n:"Radon",s:"Rn",z:86,m:222,g:18,p:6,c:"noble",st:"Gas",en:2.20,d:0.00973,mp:-71,bp:-61.7,y:1900},
+  {n:"Francium",s:"Fr",z:87,m:223,g:1,p:7,c:"alkali",st:"Solid",en:0.79,d:1.87,mp:27,bp:677,y:1939},
+  {n:"Radium",s:"Ra",z:88,m:226,g:2,p:7,c:"alkaline",st:"Solid",en:0.90,d:5.5,mp:700,bp:1737,y:1898},
+  {n:"Actinium",s:"Ac",z:89,m:227,g:3,p:7,c:"actinide",st:"Solid",en:1.10,d:10.07,mp:1050,bp:3200,y:1899},
+  {n:"Thorium",s:"Th",z:90,m:232.04,g:null,p:7,c:"actinide",st:"Solid",en:1.30,d:11.72,mp:1750,bp:4788,y:1829},
+  {n:"Protactinium",s:"Pa",z:91,m:231.04,g:null,p:7,c:"actinide",st:"Solid",en:1.50,d:15.37,mp:1572,bp:4027,y:1913},
+  {n:"Uranium",s:"U",z:92,m:238.03,g:null,p:7,c:"actinide",st:"Solid",en:1.38,d:19.05,mp:1135,bp:4131,y:1789},
+  {n:"Neptunium",s:"Np",z:93,m:237,g:null,p:7,c:"actinide",st:"Solid",en:1.36,d:20.45,mp:644,bp:4000,y:1940},
+  {n:"Plutonium",s:"Pu",z:94,m:244,g:null,p:7,c:"actinide",st:"Solid",en:1.28,d:19.84,mp:640,bp:3228,y:1940},
+  {n:"Americium",s:"Am",z:95,m:243,g:null,p:7,c:"actinide",st:"Solid",en:1.30,d:13.67,mp:1176,bp:2607,y:1944},
+  {n:"Curium",s:"Cm",z:96,m:247,g:null,p:7,c:"actinide",st:"Solid",en:1.30,d:13.51,mp:1345,bp:3110,y:1944},
+  {n:"Berkelium",s:"Bk",z:97,m:247,g:null,p:7,c:"actinide",st:"Solid",en:1.30,d:14.78,mp:1050,bp:2627,y:1949},
+  {n:"Californium",s:"Cf",z:98,m:251,g:null,p:7,c:"actinide",st:"Solid",en:1.30,d:15.1,mp:900,bp:1470,y:1950},
+  {n:"Einsteinium",s:"Es",z:99,m:252,g:null,p:7,c:"actinide",st:"Solid",en:1.30,d:8.84,mp:860,bp:996,y:1952},
+  {n:"Fermium",s:"Fm",z:100,m:257,g:null,p:7,c:"actinide",st:"Solid",en:1.30,d:null,mp:1527,bp:null,y:1952},
+  {n:"Mendelevium",s:"Md",z:101,m:258,g:null,p:7,c:"actinide",st:"Solid",en:1.30,d:null,mp:827,bp:null,y:1955},
+  {n:"Nobelium",s:"No",z:102,m:259,g:null,p:7,c:"actinide",st:"Solid",en:1.30,d:null,mp:827,bp:null,y:1958},
+  {n:"Lawrencium",s:"Lr",z:103,m:266,g:3,p:7,c:"actinide",st:"Solid",en:1.30,d:null,mp:1627,bp:null,y:1961},
+  {n:"Rutherfordium",s:"Rf",z:104,m:267,g:4,p:7,c:"transition",st:"Solid",en:null,d:null,mp:2100,bp:5500,y:1969},
+  {n:"Dubnium",s:"Db",z:105,m:268,g:5,p:7,c:"transition",st:"Solid",en:null,d:null,mp:null,bp:null,y:1967},
+  {n:"Seaborgium",s:"Sg",z:106,m:269,g:6,p:7,c:"transition",st:"Solid",en:null,d:null,mp:null,bp:null,y:1974},
+  {n:"Bohrium",s:"Bh",z:107,m:270,g:7,p:7,c:"transition",st:"Solid",en:null,d:null,mp:null,bp:null,y:1981},
+  {n:"Hassium",s:"Hs",z:108,m:277,g:8,p:7,c:"transition",st:"Solid",en:null,d:null,mp:null,bp:null,y:1984},
+  {n:"Meitnerium",s:"Mt",z:109,m:278,g:9,p:7,c:"unknown",st:"Solid",en:null,d:null,mp:null,bp:null,y:1982},
+  {n:"Darmstadtium",s:"Ds",z:110,m:281,g:10,p:7,c:"unknown",st:"Solid",en:null,d:null,mp:null,bp:null,y:1994},
+  {n:"Roentgenium",s:"Rg",z:111,m:282,g:11,p:7,c:"unknown",st:"Solid",en:null,d:null,mp:null,bp:null,y:1994},
+  {n:"Copernicium",s:"Cn",z:112,m:285,g:12,p:7,c:"transition",st:"Gas",en:null,d:null,mp:null,bp:null,y:1996},
+  {n:"Nihonium",s:"Nh",z:113,m:286,g:13,p:7,c:"unknown",st:"Solid",en:null,d:null,mp:null,bp:null,y:2004},
+  {n:"Flerovium",s:"Fl",z:114,m:289,g:14,p:7,c:"unknown",st:"Gas",en:null,d:null,mp:null,bp:null,y:1998},
+  {n:"Moscovium",s:"Mc",z:115,m:290,g:15,p:7,c:"unknown",st:"Solid",en:null,d:null,mp:null,bp:null,y:2003},
+  {n:"Livermorium",s:"Lv",z:116,m:293,g:16,p:7,c:"unknown",st:"Solid",en:null,d:null,mp:null,bp:null,y:2000},
+  {n:"Tennessine",s:"Ts",z:117,m:294,g:17,p:7,c:"unknown",st:"Solid",en:null,d:null,mp:null,bp:null,y:2010},
+  {n:"Oganesson",s:"Og",z:118,m:294,g:18,p:7,c:"unknown",st:"Gas",en:null,d:null,mp:null,bp:null,y:2002}
+];
+
+const elemByName = {}, elemBySym = {};
+ELEMENTS.forEach(e => { elemByName[e.n.toLowerCase()] = e; elemBySym[e.s.toLowerCase()] = e; });
+
+const CAT_FACTS = {
+  alkali:"Alkali metals react violently with water and are the most reactive metals.",
+  alkaline:"Alkaline earth metals are reactive but less so than alkali metals.",
+  transition:"Transition metals form colorful compounds and are widely used in industry.",
+  "post-transition":"Post-transition metals sit between transition metals and metalloids.",
+  metalloid:"Metalloids have properties of both metals and nonmetals — key to semiconductors.",
+  nonmetal:"Nonmetals are essential to life, comprising the bulk of living organisms.",
+  halogen:"Halogens are the most reactive nonmetals and readily form salts with metals.",
+  noble:"Noble gases are colorless, odorless, and extremely unreactive.",
+  lanthanide:"Lanthanides (rare-earth elements) are used in magnets, lasers, and electronics.",
+  actinide:"All actinides are radioactive; they include uranium and plutonium.",
+  unknown:"This element was synthesized recently and its properties are not yet fully characterized."
+};
+const ELEMENT_FACTS = {
+  H:"Makes up 75% of all normal matter in the universe.",
+  He:"Second most abundant element in the universe; used in MRI machines and balloons.",
+  Li:"Essential component of modern rechargeable batteries.",
+  C:"Forms more known compounds than any other element — basis of all life.",
+  N:"Makes up 78% of Earth's atmosphere.",
+  O:"Required for respiration; third most abundant element in the universe.",
+  F:"The most electronegative element on the periodic table.",
+  Na:"The sixth most abundant element in Earth's crust; vital for nerve function.",
+  Al:"The most abundant metal in Earth's crust.",
+  Si:"The basis of computer chips; second most abundant element in Earth's crust.",
+  Fe:"The most common element on Earth by mass; Earth's core is mostly iron.",
+  Cu:"One of the first metals used by humans — over 10,000 years ago.",
+  Ag:"The best electrical conductor of all elements.",
+  Au:"Has been used as currency and ornamentation for thousands of years.",
+  Hg:"The only metal that is liquid at room temperature.",
+  Pb:"The word 'plumbing' derives from plumbum, the Latin name for lead.",
+  U:"The primary fuel for nuclear power plants worldwide.",
+  W:"Has the highest melting point of all elements at 3,422°C.",
+};
+
+// ---- PERIODIC TABLE GRID LAYOUT ----
+const PT_LAYOUT = [
+  [1,1,1],[2,18,1],
+  [3,1,2],[4,2,2],[5,13,2],[6,14,2],[7,15,2],[8,16,2],[9,17,2],[10,18,2],
+  [11,1,3],[12,2,3],[13,13,3],[14,14,3],[15,15,3],[16,16,3],[17,17,3],[18,18,3],
+  [19,1,4],[20,2,4],[21,3,4],[22,4,4],[23,5,4],[24,6,4],[25,7,4],[26,8,4],[27,9,4],[28,10,4],[29,11,4],[30,12,4],[31,13,4],[32,14,4],[33,15,4],[34,16,4],[35,17,4],[36,18,4],
+  [37,1,5],[38,2,5],[39,3,5],[40,4,5],[41,5,5],[42,6,5],[43,7,5],[44,8,5],[45,9,5],[46,10,5],[47,11,5],[48,12,5],[49,13,5],[50,14,5],[51,15,5],[52,16,5],[53,17,5],[54,18,5],
+  [55,1,6],[56,2,6],[57,3,6],[72,4,6],[73,5,6],[74,6,6],[75,7,6],[76,8,6],[77,9,6],[78,10,6],[79,11,6],[80,12,6],[81,13,6],[82,14,6],[83,15,6],[84,16,6],[85,17,6],[86,18,6],
+  [87,1,7],[88,2,7],[89,3,7],[104,4,7],[105,5,7],[106,6,7],[107,7,7],[108,8,7],[109,9,7],[110,10,7],[111,11,7],[112,12,7],[113,13,7],[114,14,7],[115,15,7],[116,16,7],[117,17,7],[118,18,7],
+  [58,4,9],[59,5,9],[60,6,9],[61,7,9],[62,8,9],[63,9,9],[64,10,9],[65,11,9],[66,12,9],[67,13,9],[68,14,9],[69,15,9],[70,16,9],[71,17,9],
+  [90,4,10],[91,5,10],[92,6,10],[93,7,10],[94,8,10],[95,9,10],[96,10,10],[97,11,10],[98,12,10],[99,13,10],[100,14,10],[101,15,10],[102,16,10],[103,17,10]
+];
+const CAT_CLASS = {
+  alkali:'cat-alkali', alkaline:'cat-alkaline', transition:'cat-transition',
+  'post-transition':'cat-post-transition', metalloid:'cat-metalloid', nonmetal:'cat-nonmetal',
+  halogen:'cat-halogen', noble:'cat-noble', lanthanide:'cat-lanthanide',
+  actinide:'cat-actinide', unknown:'cat-unknown'
+};
+
+// ============================================================
+// DAILY INDEX — UTC-based so every player in the world
+// gets the same element on the same calendar date.
+// The epoch (Jan 1 2024 UTC) is fixed; the index cycles
+// through all 118 elements by days elapsed since then.
+// ============================================================
+function getDailyIndex() {
+  const now = new Date();
+  // Use UTC year/month/day to be timezone-independent
+  const utcMidnight = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const epochUTC = Date.UTC(2024, 0, 1); // Jan 1 2024 UTC
+  const dayNum = Math.floor((utcMidnight - epochUTC) / 86400000);
+  return ((dayNum % 118) + 118) % 118; // always 0–117
+}
+
+function getTodayUTCString() {
+  const now = new Date();
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')}`;
+}
+
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+  target: null,
+  guesses: [],        // array of element objects
+  gameOver: false,
+  forfeited: false,
+  mode: 'daily',
+  difficulty: 'normal',
+  maxGuesses: 8,
+  hintsLeft: 3,
+  hintsUsed: [],
+  timerInterval: null,
+  timerSecs: 180,
+  timerMax: 180,
+  settings: { colorblind: false, sound: true, animations: true },
+  pendingAC: -1,
+};
+
+let stats = {
+  played: 0, wins: 0, streak: 0, best: 0,
+  dist: {}, lastDate: null
+};
+
+// ============================================================
+// PERSISTENCE — save/load daily progress so tab-switching
+// and refreshes cannot be used to get a clean slate.
+// ============================================================
+const SAVE_KEY     = 'elementle_daily_v2';
+const STATS_KEY    = 'elementle_stats_v2';
+const SETTINGS_KEY = 'elementle_settings_v2';
+
+function saveDailyProgress() {
+  if (state.mode !== 'daily') return;
+  const today = getTodayUTCString();
+  const data = {
+    date: today,
+    targetZ: state.target.z,
+    guessZs: state.guesses.map(g => g.z),
+    gameOver: state.gameOver,
+    forfeited: state.forfeited,
+    hintsLeft: state.hintsLeft,
+    hintsUsed: state.hintsUsed,
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch(e){}
+}
+
+function loadDailyProgress() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (data.date !== getTodayUTCString()) return null; // yesterday's save, discard
+    return data;
+  } catch(e) { return null; }
+}
+
+function saveStats() { try { localStorage.setItem(STATS_KEY, JSON.stringify(stats)); } catch(e){} }
+function loadStats()  { try { const s = localStorage.getItem(STATS_KEY); if (s) stats = {...stats,...JSON.parse(s)}; } catch(e){} }
+
+function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(state.settings)); } catch(e){} }
+function loadSettings() {
+  try { const s = localStorage.getItem(SETTINGS_KEY); if (s) state.settings = {...state.settings,...JSON.parse(s)}; } catch(e){}
+  applySettings();
+}
+function applySettings() {
+  document.body.classList.toggle('colorblind', state.settings.colorblind);
+  document.getElementById('toggle-colorblind').classList.toggle('on', state.settings.colorblind);
+  document.getElementById('toggle-sound').classList.toggle('on', state.settings.sound);
+  document.getElementById('toggle-animations').classList.toggle('on', state.settings.animations);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  loadStats();
+  loadSettings();
+  buildPT();
+  setupEvents();
+  buildDataSheetTable();
+  newGame(true);
+}
+
+// ============================================================
+// NEW GAME
+// ============================================================
+function newGame(firstLoad=false) {
+  closeModal('end-modal');
+  if (state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
+
+  const diff = state.difficulty;
+  state.maxGuesses = diff === 'easy' ? 12 : diff === 'hard' ? 5 : 8;
+  state.forfeited = false;
+
+  if (state.mode === 'daily') {
+    state.target = ELEMENTS[getDailyIndex()];
+    // Always 8 guesses for daily regardless of difficulty setting
+    state.maxGuesses = 8;
+
+    // ---- RESTORE SAVED PROGRESS ----
+    const saved = loadDailyProgress();
+    if (saved && saved.targetZ === state.target.z) {
+      state.guesses  = saved.guessZs.map(z => ELEMENTS[z-1]);
+      state.gameOver = saved.gameOver;
+      state.forfeited= saved.forfeited;
+      state.hintsLeft= saved.hintsLeft ?? 3;
+      state.hintsUsed= saved.hintsUsed ?? [];
+    } else {
+      state.guesses   = [];
+      state.gameOver  = false;
+      state.hintsLeft = 3;
+      state.hintsUsed = [];
+    }
+  } else {
+    state.target    = ELEMENTS[Math.floor(Math.random() * 118)];
+    state.guesses   = [];
+    state.gameOver  = false;
+    state.hintsLeft = 3;
+    state.hintsUsed = [];
+  }
+
+  // Reset UI
+  document.getElementById('target-qmark').textContent = state.gameOver || state.forfeited ? state.target.s : '?';
+  document.getElementById('target-title').textContent = state.gameOver
+    ? (state.forfeited ? '☠️ Game forfeited' : '✅ Game over')
+    : 'Guess today\'s mystery element!';
+  document.getElementById('target-clue').textContent = 'Type an element name or symbol to start guessing.';
+  document.getElementById('guess-num').textContent = state.guesses.length;
+  document.getElementById('max-guesses').textContent = state.maxGuesses;
+  document.getElementById('max-guesses-label').textContent = state.maxGuesses;
+  document.getElementById('diff-label').textContent = diff.charAt(0).toUpperCase() + diff.slice(1);
+  document.getElementById('hint-count').textContent = `(${state.hintsLeft} left)`;
+  document.getElementById('hint-text').classList.remove('show');
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-input').disabled = state.gameOver;
+  document.getElementById('search-submit').disabled = state.gameOver;
+  document.getElementById('hint-btn').style.display = state.gameOver ? 'none' : 'flex';
+  document.getElementById('forfeit-banner').classList.toggle('show', !!state.forfeited);
+  document.getElementById('guess-area').innerHTML = '<div id="empty-state"><div class="big">⚗</div><p>Guess any element from the periodic table.<br>Each guess reveals clues about the mystery element.</p></div>';
+  document.getElementById('guess-header').style.display = 'none';
+
+  if (state.ptCells) Object.values(state.ptCells).forEach(c => c.classList.remove('guessed','target-reveal'));
+
+  // Replay guesses silently (no animation/audio)
+  if (state.guesses.length > 0) {
+    renderGuesses();
+    if (state.ptCells) {
+      state.guesses.forEach(g => { if (state.ptCells[g.z]) state.ptCells[g.z].classList.add('guessed'); });
+      if (state.gameOver && state.ptCells[state.target.z]) state.ptCells[state.target.z].classList.add('target-reveal');
+    }
+    if (state.guesses.length > 0) {
+      const last = state.guesses[state.guesses.length-1];
+      if (!state.gameOver) updateTargetClue(last);
+    }
+  }
+
+  // Re-show hints used
+  if (state.hintsUsed && state.hintsUsed.length > 0) {
+    const ht = document.getElementById('hint-text');
+    ht.textContent = '💡 ' + state.hintsUsed[state.hintsUsed.length-1];
+    ht.classList.add('show');
+  }
+
+  if (state.gameOver) {
+    setTimeout(() => openModal('end-modal'), 400);
+  }
+
+  if (state.mode === 'timed') startTimer();
+  else document.getElementById('timer-wrap').classList.remove('show');
+
+  updateStreak();
+}
+
+// ============================================================
+// TIMER (timed mode only)
+// ============================================================
+function startTimer() {
+  state.timerSecs = state.timerMax = state.difficulty === 'easy' ? 300 : state.difficulty === 'hard' ? 120 : 180;
+  document.getElementById('timer-wrap').classList.add('show');
+  updateTimerUI();
+  state.timerInterval = setInterval(() => {
+    state.timerSecs--;
+    updateTimerUI();
+    if (state.timerSecs <= 0) { clearInterval(state.timerInterval); if (!state.gameOver) endGame(false); }
+  }, 1000);
+}
+function updateTimerUI() {
+  const m = Math.floor(state.timerSecs/60), s = state.timerSecs%60;
+  document.getElementById('timer-val').textContent = `${m}:${String(s).padStart(2,'0')}`;
+  const pct = (state.timerSecs/state.timerMax)*100;
+  document.getElementById('timer-fill').style.width = pct+'%';
+  document.getElementById('timer-fill').style.background = pct>50 ? '' : pct>25 ? 'linear-gradient(90deg,#f0c040,#f09040)' : 'linear-gradient(90deg,#f06060,#f04040)';
+}
+
+// ============================================================
+// SEARCH / AUTOCOMPLETE
+// ============================================================
+function setupEvents() {
+  const inp = document.getElementById('search-input');
+  const ac  = document.getElementById('autocomplete');
+  inp.addEventListener('input', () => {
+    state.pendingAC = -1;
+    const v = inp.value.trim().toLowerCase();
+    if (!v) { ac.classList.remove('show'); return; }
+    const matches = ELEMENTS.filter(e =>
+      e.n.toLowerCase().startsWith(v) || e.s.toLowerCase().startsWith(v) || e.n.toLowerCase().includes(v)
+    ).slice(0,8);
+    if (!matches.length) { ac.classList.remove('show'); return; }
+    ac.innerHTML = matches.map(e =>
+      `<div class="ac-item" data-name="${e.n}" onmousedown="selectAC('${e.n}')">
+        <span class="ac-sym">${e.s}</span>${e.n}<span class="ac-num">#${e.z}</span>
+      </div>`
+    ).join('');
+    ac.classList.add('show');
+  });
+  inp.addEventListener('keydown', (ev) => {
+    const items = ac.querySelectorAll('.ac-item');
+    if (ev.key==='ArrowDown') { state.pendingAC=Math.min(state.pendingAC+1,items.length-1); highlightAC(items); ev.preventDefault(); }
+    else if (ev.key==='ArrowUp') { state.pendingAC=Math.max(state.pendingAC-1,-1); highlightAC(items); ev.preventDefault(); }
+    else if (ev.key==='Enter') { if (state.pendingAC>=0&&items[state.pendingAC]) selectAC(items[state.pendingAC].dataset.name); else submitGuess(); ev.preventDefault(); }
+    else if (ev.key==='Escape') ac.classList.remove('show');
+  });
+  document.addEventListener('keydown', ev => { if (ev.key==='Escape') document.querySelectorAll('.modal-overlay.show').forEach(m=>m.classList.remove('show')); });
+  document.addEventListener('click', ev => { if (!ev.target.closest('#search-wrap')) ac.classList.remove('show'); });
+}
+function highlightAC(items) { items.forEach((item,i)=>item.classList.toggle('selected',i===state.pendingAC)); }
+function selectAC(name) { document.getElementById('search-input').value=name; document.getElementById('autocomplete').classList.remove('show'); state.pendingAC=-1; }
+
+// ============================================================
+// GUESS SUBMISSION
+// ============================================================
+function submitGuess() {
+  if (state.gameOver) return;
+  const val = document.getElementById('search-input').value.trim();
+  const e = elemByName[val.toLowerCase()] || elemBySym[val.toLowerCase()];
+  if (!e) { showToast('Element not found. Try name or symbol.'); playWrong(); return; }
+  if (state.guesses.find(g=>g.z===e.z)) { showToast(`${e.n} already guessed!`); return; }
+  submitGuessElement(e);
+}
+
+function submitGuessElement(elem) {
+  state.guesses.push(elem);
+  document.getElementById('search-input').value='';
+  document.getElementById('autocomplete').classList.remove('show');
+  document.getElementById('guess-num').textContent = state.guesses.length;
+  if (state.ptCells && state.ptCells[elem.z]) state.ptCells[elem.z].classList.add('guessed');
+  renderGuesses();
+
+  const won = elem.z === state.target.z;
+  saveDailyProgress(); // persist after every guess
+
+  if (won) { setTimeout(()=>endGame(true),600); playCorrect(); }
+  else if (state.guesses.length >= state.maxGuesses) { setTimeout(()=>endGame(false),600); playWrong(); }
+  else {
+    playYellow();
+    updateTargetClue(elem);
+  }
+}
+
+function updateTargetClue(last) {
+  const diff = last.z - state.target.z;
+  const dir  = diff>0 ? '↓ lower' : '↑ higher';
+  document.getElementById('target-clue').textContent =
+    `Last: ${last.n} (#${last.z}). Atomic number is ${dir}. ${state.maxGuesses-state.guesses.length} guesses left.`;
+}
+
+// ============================================================
+// RENDER GUESSES
+// ============================================================
+function renderGuesses() {
+  const area   = document.getElementById('guess-area');
+  const header = document.getElementById('guess-header');
+  header.style.display = 'block';
+  area.innerHTML = '';
+  state.guesses.forEach((elem, idx) => area.appendChild(buildGuessRow(elem, idx)));
+}
+
+function buildGuessRow(elem, idx) {
+  const t = state.target;
+  const row = document.createElement('div');
+  row.className = 'guess-row';
+  const delay = state.settings.animations ? idx*0.03 : 0;
+
+  const nc = document.createElement('div');
+  nc.className = 'cell-name';
+  nc.style.cssText = 'background:var(--surface);border:1px solid var(--border)';
+  nc.innerHTML = `<span class="sym">${elem.s}</span><div><div class="nm">${elem.n}</div><div class="num">#${elem.z}</div></div>`;
+  row.appendChild(nc);
+
+  const props = [
+    {key:'z',  val:elem.z,  target:t.z,  type:'num', range:5},
+    {key:'m',  val:elem.m,  target:t.m,  type:'num', range:10},
+    {key:'g',  val:elem.g,  target:t.g,  type:'num', range:1},
+    {key:'p',  val:elem.p,  target:t.p,  type:'num', range:1},
+    {key:'c',  val:elem.c,  target:t.c,  type:'cat'},
+    {key:'st', val:elem.st, target:t.st, type:'exact'},
+    {key:'en', val:elem.en, target:t.en, type:'num', range:0.5},
+    {key:'d',  val:elem.d,  target:t.d,  type:'num', range:2},
+    {key:'mp', val:elem.mp, target:t.mp, type:'num', range:200},
+    {key:'bp', val:elem.bp, target:t.bp, type:'num', range:200},
+    {key:'y',  val:elem.y,  target:t.y,  type:'num', range:30},
+  ];
+
+  props.forEach((prop, pi) => {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    if (state.settings.animations) cell.style.animationDelay = `${delay+pi*0.04}s`;
+    const {color, arrow, displayVal} = evalProp(prop);
+    cell.classList.add(color);
+    cell.innerHTML = `<div class="val">${displayVal}</div>${arrow?`<div class="arrow">${arrow}</div>`:''}`;
+    row.appendChild(cell);
+  });
+  return row;
+}
+
+function evalProp({key, val, target, type, range}) {
+  if (val===null||target===null) return {color:'gray',arrow:'',displayVal:'?'};
+  if (type==='exact') {
+    return {color: val===target?'green':'gray', arrow:'', displayVal: fmtVal(key,val)};
+  }
+  if (type==='cat') {
+    if (val===target) return {color:'green',arrow:'',displayVal:fmtVal(key,val)};
+    return {color: isSameFamily(val,target)?'yellow':'gray', arrow:'', displayVal:fmtVal(key,val)};
+  }
+  if (type==='num') {
+    const diff = Math.abs(val-target);
+    if (diff===0) return {color:'green',arrow:'',displayVal:fmtVal(key,val)};
+    const arrow = val<target ? '↑' : '↓';
+    return {color: diff<=range?'yellow':'gray', arrow, displayVal:fmtVal(key,val)};
+  }
+  return {color:'gray',arrow:'',displayVal:fmtVal(key,val)};
+}
+function isSameFamily(c1,c2) {
+  const fams = [['alkali'],['alkaline'],['noble'],['halogen'],['lanthanide'],['actinide'],['transition','post-transition'],['metalloid'],['nonmetal']];
+  return fams.some(f=>f.includes(c1)&&f.includes(c2));
+}
+function fmtVal(key,val) {
+  if (val===null) return '?';
+  switch(key) {
+    case 'z': return val;
+    case 'm': return val.toFixed(1);
+    case 'g': return val??'*';
+    case 'p': return val;
+    case 'c': return val.charAt(0).toUpperCase()+val.slice(1,4);
+    case 'st': return val.slice(0,3);
+    case 'en': return val.toFixed(2);
+    case 'd': return val<0.01?val.toExponential(1):val.toFixed(2);
+    case 'mp': case 'bp': return (val>0?'+':'')+Math.round(val);
+    case 'y': return val<0?'BC':val;
+    default: return val;
+  }
+}
+
+// ============================================================
+// END GAME
+// ============================================================
+function endGame(won, forfeited=false) {
+  state.gameOver = true;
+  state.forfeited = forfeited;
+  if (state.timerInterval) clearInterval(state.timerInterval);
+  document.getElementById('search-input').disabled = true;
+  document.getElementById('search-submit').disabled = true;
+  document.getElementById('hint-btn').style.display = 'none';
+  if (state.ptCells && state.ptCells[state.target.z]) state.ptCells[state.target.z].classList.add('target-reveal');
+  document.getElementById('target-qmark').textContent = state.target.s;
+
+  if (!forfeited) {
+    stats.played++;
+    if (won) {
+      stats.wins++;
+      stats.streak++;
+      if (stats.streak>stats.best) stats.best=stats.streak;
+      stats.dist[state.guesses.length] = (stats.dist[state.guesses.length]||0)+1;
+    } else {
+      stats.streak=0;
+    }
+    saveStats();
+  }
+
+  saveDailyProgress();
+  updateStreak();
+
+  const t = state.target;
+  document.getElementById('end-title').textContent = forfeited ? '☠️ Forfeited' : won
+    ? ['🎉 Brilliant!','⚗ You got it!','🏆 Correct!','✨ Nailed it!'][Math.floor(Math.random()*4)]
+    : '💔 Better luck next time!';
+  document.getElementById('win-sym').textContent = t.s;
+  document.getElementById('win-name').textContent = t.n;
+  document.getElementById('win-desc').textContent = `#${t.z} · ${t.c.charAt(0).toUpperCase()+t.c.slice(1)} · Period ${t.p}${t.g?' · Group '+t.g:''}`;
+  document.getElementById('w-num').textContent = t.z;
+  document.getElementById('w-guesses').textContent = forfeited ? 'Forfeited' : won ? state.guesses.length : 'X/'+state.maxGuesses;
+  document.getElementById('w-streak').textContent = stats.streak;
+  const fact = ELEMENT_FACTS[t.s] || CAT_FACTS[t.c] || `Discovered in ${t.y<0?'antiquity':t.y}.`;
+  document.getElementById('fun-fact').innerHTML = `<strong>💡 Fun fact:</strong> ${fact}`;
+
+  // Hide new game button for daily (can't replay today)
+  document.getElementById('new-game-btn').style.display = state.mode==='daily' ? 'none' : 'block';
+  document.getElementById('new-game-btn').textContent = '🎲 New Game';
+
+  setTimeout(()=>openModal('end-modal'), forfeited?0:800);
+  if (won && state.settings.animations && !forfeited) launchConfetti();
+  if (won && !forfeited) playWin();
+}
+
+// ============================================================
+// HINT
+// ============================================================
+function showHint() {
+  if (state.hintsLeft<=0) { showToast('No hints left!'); return; }
+  if (state.gameOver) return;
+  state.hintsLeft--;
+  const t = state.target;
+  const pool = [
+    `Period ${t.p}.`,
+    `It is a ${t.c.replace('-',' ')}.`,
+    `State at room temp: ${t.st.toLowerCase()}.`,
+    t.g ? `Group ${t.g}.` : `No main group number (${t.c}).`,
+    `Atomic mass ≈ ${Math.round(t.m)}.`,
+    `Symbol starts with '${t.s[0]}'.`,
+    t.y<0 ? `Known since antiquity.` : `Discovered in ${t.y}.`,
+  ];
+  // Pick a hint not yet shown
+  const unused = pool.filter(h => !state.hintsUsed.includes(h));
+  const h = unused.length ? unused[Math.floor(Math.random()*unused.length)] : pool[Math.floor(Math.random()*pool.length)];
+  state.hintsUsed.push(h);
+  document.getElementById('hint-count').textContent = `(${state.hintsLeft} left)`;
+  const ht = document.getElementById('hint-text');
+  ht.textContent = '💡 ' + h;
+  ht.classList.add('show');
+  saveDailyProgress();
+  playTone(660,'sine',0.08,0.15);
+}
+
+// ============================================================
+// SHARE
+// ============================================================
+function shareResults() {
+  const t = state.target;
+  const won = !state.forfeited && state.guesses.length > 0 && state.guesses[state.guesses.length-1]?.z===t.z;
+  const score = state.forfeited ? 'F' : won ? state.guesses.length : 'X';
+  const em = {green:'🟩',yellow:'🟨',gray:'⬛'};
+  const rows = state.guesses.map(elem => {
+    const props = [
+      {val:elem.z,target:t.z,type:'num',range:5},
+      {val:elem.m,target:t.m,type:'num',range:10},
+      {val:elem.g,target:t.g,type:'num',range:1},
+      {val:elem.p,target:t.p,type:'num',range:1},
+      {val:elem.c,target:t.c,type:'cat'},
+      {val:elem.st,target:t.st,type:'exact'},
+      {val:elem.en,target:t.en,type:'num',range:0.5},
+      {val:elem.d,target:t.d,type:'num',range:2},
+      {val:elem.mp,target:t.mp,type:'num',range:200},
+      {val:elem.bp,target:t.bp,type:'num',range:200},
+      {val:elem.y,target:t.y,type:'num',range:30},
+    ];
+    return props.map(p=>{if(p.val===null||p.target===null)return em.gray;const{color}=evalProp(p);return em[color]||em.gray;}).join('');
+  });
+  const modeLabel = state.mode==='daily' ? `#${getDailyIndex()+1}` : 'Random';
+  const text = `⚗ Elementle ${modeLabel} ${score}/${state.maxGuesses}\n\n${rows.join('\n')}\n\nsmplesco.github.io/elementle`;
+  navigator.clipboard.writeText(text).then(()=>showToast('Results copied! 📋')).catch(()=>showToast('Copy failed — check browser permissions'));
+}
+
+// ============================================================
+// STATS
+// ============================================================
+function updateStreak() { document.getElementById('streak-display').textContent = `🔥 ${stats.streak}`; }
+function openStatsModal() {
+  document.getElementById('s-played').textContent = stats.played;
+  document.getElementById('s-win').textContent    = stats.played ? Math.round(stats.wins/stats.played*100)+'%' : '0%';
+  document.getElementById('s-streak').textContent = stats.streak;
+  document.getElementById('s-best').textContent   = stats.best;
+  const maxVal = Math.max(1,...Object.values(stats.dist).map(Number));
+  const bars = document.getElementById('dist-bars');
+  bars.innerHTML='';
+  for(let i=1;i<=12;i++) {
+    const v=stats.dist[i]||0, pct=Math.round(v/maxVal*100);
+    const isLast=state.guesses.length===i&&!state.gameOver;
+    bars.innerHTML+=`<div class="dist-bar"><span style="width:12px;text-align:right;font-family:var(--mono);font-size:0.75rem">${i}</span><div class="bar-wrap"><div class="bar-fill ${isLast?'highlight':''}" style="width:${Math.max(pct,v?4:0)}%">${v||''}</div></div></div>`;
+  }
+}
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function toggleSetting(key) {
+  state.settings[key]=!state.settings[key];
+  saveSettings(); applySettings();
+}
+function changeDifficulty(val) { state.difficulty=val; saveSettings(); }
+function resetStats() {
+  if (confirm('Reset all statistics?')) {
+    stats={played:0,wins:0,streak:0,best:0,dist:{},lastDate:null};
+    saveStats(); updateStreak(); showToast('Stats reset!');
+  }
+}
+
+// ============================================================
+// MODE
+// ============================================================
+function setMode(mode) {
+  state.mode=mode;
+  document.querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+mode).classList.add('active');
+  newGame();
+}
+
+// ============================================================
+// PERIODIC TABLE
+// ============================================================
+function buildPT() {
+  const grid=document.getElementById('pt-grid');
+  grid.innerHTML='';
+  state.ptCells={};
+  PT_LAYOUT.forEach(([z,col,row])=>{
+    const e=ELEMENTS[z-1];
+    const div=document.createElement('div');
+    div.className=`pt-cell ${CAT_CLASS[e.c]||'cat-unknown'}`;
+    div.dataset.z=z;
+    div.style.cssText=`grid-column:${col};grid-row:${row}`;
+    div.innerHTML=`<span class="pt-num">${z}</span><span class="pt-sym">${e.s}</span>`;
+    div.title=e.n;
+    div.addEventListener('click',()=>{ if(!state.gameOver&&!state.guesses.find(g=>g.z===e.z)) submitGuessElement(e); else if(state.guesses.find(g=>g.z===e.z)) showToast(`${e.n} already guessed!`); });
+    div.addEventListener('mouseenter',ev=>showFactsPopup(e,ev));
+    div.addEventListener('mouseleave',hideFactsPopup);
+    grid.appendChild(div);
+    state.ptCells[z]=div;
+  });
+}
+function togglePT() {
+  const wrap=document.getElementById('pt-wrap'), btn=document.getElementById('pt-toggle');
+  wrap.classList.toggle('show');
+  btn.textContent=wrap.classList.contains('show')?'🔬 Hide Periodic Table':'🔬 Show Periodic Table';
+}
+
+// ============================================================
+// ELEMENT DATA SHEET
+// ============================================================
+function buildDataSheetTable() {
+  const tbody = document.getElementById('ds-tbody');
+  const catColors = {
+    alkali:'#f07070',alkaline:'#f09850',transition:'#a090f0','post-transition':'#60c0f0',
+    metalloid:'#60f0c0',nonmetal:'#70e070',halogen:'#f060c0',noble:'#f0c840',
+    lanthanide:'#c090f0',actinide:'#f08080',unknown:'#909090'
+  };
+  tbody.innerHTML = ELEMENTS.map(e => `
+    <tr data-search="${e.n.toLowerCase()} ${e.s.toLowerCase()} ${e.c}">
+      <td style="font-family:var(--mono);color:var(--accent)">${e.z}</td>
+      <td class="sym-col">${e.s}</td>
+      <td class="name-col">${e.n}</td>
+      <td>${e.m}</td>
+      <td>${e.g??'—'}</td>
+      <td>${e.p}</td>
+      <td><span class="cat-badge" style="background:${catColors[e.c]||'#888'}22;color:${catColors[e.c]||'#888'};border:1px solid ${catColors[e.c]||'#888'}44">${e.c}</span></td>
+      <td>${e.st}</td>
+      <td>${e.en??'—'}</td>
+      <td>${e.d!=null?e.d:'—'}</td>
+      <td>${e.mp!=null?e.mp+'°':'—'}</td>
+      <td>${e.bp!=null?e.bp+'°':'—'}</td>
+      <td>${e.y<0?'Antiquity':e.y}</td>
+    </tr>`).join('');
+}
+
+function filterDataSheet() {
+  const q = document.getElementById('ds-search').value.trim().toLowerCase();
+  document.querySelectorAll('#ds-tbody tr').forEach(row => {
+    row.style.display = !q || row.dataset.search.includes(q) ? '' : 'none';
+  });
+}
+
+function openDataSheet() {
+  // Reset the confirmation state each time it's opened
+  document.getElementById('datasheet-content').classList.remove('show');
+  document.getElementById('datasheet-confirm-row').style.display = 'flex';
+  document.getElementById('ds-search').value = '';
+  filterDataSheet();
+
+  // Show special warning if daily is active and not yet over
+  const isDailyActive = state.mode==='daily' && !state.gameOver && state.guesses.length >= 0;
+  const warn = document.getElementById('ds-daily-warning');
+  if (isDailyActive && !state.gameOver) {
+    warn.style.display = 'block';
+    warn.textContent = state.guesses.length > 0
+      ? `⚠️ You have an active Daily Challenge with ${state.guesses.length} guess${state.guesses.length===1?'':'es'} in progress. Opening this sheet will forfeit today's game and reveal the answer.`
+      : `⚠️ You have not started today's Daily Challenge yet. Opening this sheet will forfeit the game before you even begin.`;
+  } else {
+    warn.style.display = 'none';
+  }
+  openModal('datasheet-modal');
+}
+
+function confirmDataSheet() {
+  // Show the data table
+  document.getElementById('datasheet-content').classList.add('show');
+  document.getElementById('datasheet-confirm-row').style.display = 'none';
+
+  // Forfeit daily if it's in progress
+  if (state.mode==='daily' && !state.gameOver) {
+    state.forfeited = true;
+    document.getElementById('forfeit-banner').classList.add('show');
+    endGame(false, true);
+  }
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function openModal(id) { if(id==='stats-modal') openStatsModal(); document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');}));
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function showToast(msg) {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// ============================================================
+// FACTS POPUP
+// ============================================================
+function showFactsPopup(e,ev) {
+  const p=document.getElementById('facts-popup');
+  const fact=ELEMENT_FACTS[e.s]||CAT_FACTS[e.c]||'';
+  p.innerHTML=`<h4>${e.n} (${e.s})</h4><p>#${e.z} · ${e.c} · Period ${e.p}${e.g?' · Group '+e.g:''}<br>Mass: ${e.m} u · State: ${e.st}${fact?'<br><br>'+fact:''}</p>`;
+  p.style.left=Math.min(ev.pageX+12,window.innerWidth-260)+'px';
+  p.style.top=Math.max(ev.pageY-40,10)+'px';
+  p.classList.add('show');
+}
+function hideFactsPopup() { document.getElementById('facts-popup').classList.remove('show'); }
+
+// ============================================================
+// AUDIO
+// ============================================================
+const AudioCtx=window.AudioContext||window.webkitAudioContext;
+let audioCtx;
+function getACtx(){if(!audioCtx)audioCtx=new AudioCtx();return audioCtx;}
+function playTone(freq,type='sine',vol=0.08,dur=0.12,delay=0){
+  if(!state.settings.sound)return;
+  try{const ctx=getACtx(),osc=ctx.createOscillator(),g=ctx.createGain();
+  osc.connect(g);g.connect(ctx.destination);osc.type=type;osc.frequency.value=freq;
+  const t=ctx.currentTime+delay;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(0.001,t+dur);
+  osc.start(t);osc.stop(t+dur);}catch(e){}
+}
+function playCorrect(){[523,659,784,1047].forEach((f,i)=>playTone(f,'sine',0.1,0.15,i*0.08));}
+function playWrong(){playTone(160,'sawtooth',0.07,0.2);}
+function playYellow(){playTone(440,'sine',0.06,0.1);}
+function playWin(){[523,587,659,698,784,880,988,1047].forEach((f,i)=>playTone(f,'sine',0.09,0.2,i*0.06));}
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti(){
+  const canvas=document.getElementById('confetti-canvas'),ctx=canvas.getContext('2d');
+  canvas.width=window.innerWidth;canvas.height=window.innerHeight;
+  const particles=[],colors=['#4af0b4','#7b6ff0','#f06090','#f0c040','#60c0f0','#f07070'];
+  for(let i=0;i<120;i++) particles.push({x:Math.random()*canvas.width,y:-10,vx:(Math.random()-0.5)*4,vy:Math.random()*4+2,color:colors[Math.floor(Math.random()*colors.length)],size:Math.random()*8+4,rot:Math.random()*360,rotV:(Math.random()-0.5)*6,life:1});
+  let frame;
+  (function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    let alive=false;
+    particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.rot+=p.rotV;p.vy+=0.1;p.life-=0.008;
+      if(p.life>0&&p.y<canvas.height+20)alive=true;
+      ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rot*Math.PI/180);ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.color;ctx.fillRect(-p.size/2,-p.size/4,p.size,p.size/2);ctx.restore();});
+    if(alive)frame=requestAnimationFrame(draw);else ctx.clearRect(0,0,canvas.width,canvas.height);
+  })();
+  setTimeout(()=>{cancelAnimationFrame(frame);ctx.clearRect(0,0,canvas.width,canvas.height);},4000);
+}
+
+// ============================================================
+// BOOT
+// ============================================================
+window.addEventListener('DOMContentLoaded',()=>init());
+</script>
+</body>
+</html>
